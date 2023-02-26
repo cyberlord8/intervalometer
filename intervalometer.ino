@@ -15,10 +15,10 @@ int shutterRelay = 11;         // pin for camera shutter release control relayin
 int runButton = 12;            //input pin to start/stop the Intervalometer sequence
 // int stopButton = 13;           //input pin to start/stop the Intervalometer sequence
 
-int numberExposures = -1;                      //number of exposure to take in sequence
+int numberExposures = 60;                      //number of exposure to take in sequence
 int numberExposuresCounter = numberExposures;  //counter for number of exposures left
-int intervalLength = 1000;                     //shutter open interval (milli seconds)
-int intervalSpacing = 50;                      //shutter closed interval (milli seconds)
+int intervalLength = 60000;                    //shutter open interval (milli seconds)
+int intervalSpacing = 250;                     //shutter closed interval (milli seconds)
 int mirrorDelay = 0;                           //mirror lag delay (milli seconds)
 
 bool isRunning = false;  //is sequence routine running
@@ -107,6 +107,46 @@ void loop() {
     Serial.print(intervalSpacing);
     Serial.print(" - Mir: ");
     Serial.println(mirrorDelay);
+    if (numberExposuresCounter > 0) {
+      float timeRemaining = ((numberExposuresCounter * intervalLength) + (numberExposuresCounter * intervalSpacing)) / 1000.0;
+      // Serial.print("Seconds remaining: ");
+      // Serial.println(timeRemaining);
+      if (timeRemaining < 60) {
+        Serial.print("Seconds remaining: ");
+        Serial.println(timeRemaining);
+      }  //if less than 60 seconds
+      else if (timeRemaining < 3600) {
+        Serial.print("Time remaining: ");
+        int hours = 0;
+        int minutes = 0;
+        float seconds = 0.0;
+        minutes = timeRemaining / 60.0;
+        seconds = timeRemaining - (minutes * 60.0);
+        Serial.print(hours);
+        Serial.print(":");
+        Serial.print(minutes);
+        Serial.print(":");
+        Serial.println(seconds);
+      }  //else if less than 3600 seconds
+      else {
+        Serial.print("Time remaining: ");
+        int hours = 0;
+        int minutes = 0;
+        float seconds = 0.0;
+        hours = timeRemaining / 60 / 60;
+        minutes = (timeRemaining - (hours * 60 * 60)) / 60.0;
+        if (minutes == 0) {
+          seconds = (timeRemaining - (hours * 60 * 60));
+        } else {
+          seconds = timeRemaining - (hours * 60 * 60) - (minutes * 60.0);
+        }
+        Serial.print(hours);
+        Serial.print(":");
+        Serial.print(minutes);
+        Serial.print(":");
+        Serial.println(seconds);
+      }  //else must be more than an hour remaining
+    }    //if not infinite sequence
 
     digitalWrite(shutterRelay, HIGH);
     delay(intervalLength + mirrorDelay);
@@ -132,11 +172,11 @@ void loop() {
   else {
     digitalWrite(runningLED, LOW);
     digitalWrite(shutterRelay, LOW);
-    if(hasStopped){
+    if (hasStopped) {
       hasStopped = false;
       Serial.println("Stopped!");
       Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-}
+    }
     mySerialEvent();
     if (stringComplete) {  //if serial read has completed
       handleStringComplete();
