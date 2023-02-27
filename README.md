@@ -12,13 +12,13 @@ Two modes of operation:
 
 1. Serial port control through the USB port connected to a PC
 
-  Current commands:
-  
-    ~NUM - Sets the number of exposures to take (-1 infinite)
-    ~INT - Sets the length of the shutter open in milli seconds
-    ~SPC - Sets the delay between sequences (shutter closed)
-    ~MIR - Sets the mirror lift delay (must match camera setting)
-    ~RUN - Starts the exposure sequence using the prescribed values
-    ~STP - Stops the exposure sequence
+      Current commands:
+
+        ~NUM - Sets the number of exposures to take (-1 infinite)
+        ~INT - Sets the length of the shutter open in milli seconds
+        ~SPC - Sets the delay between sequences (shutter closed)
+        ~MIR - Sets the mirror lift delay (must match camera setting)
+        ~RUN - Starts the exposure sequence using the prescribed values
+        ~STP - Stops the exposure sequence
 
 2. Push button starts and stops exposure sequence, check code for pin number.
