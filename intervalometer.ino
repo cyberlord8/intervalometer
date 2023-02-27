@@ -1,6 +1,8 @@
 /*
   InterValometer sketch for PicoW Copyright 2023 Timothy Millea - Released under GPLv3 license
 
+  aka - an elaborate blinky sketch with a start/stop push button
+
   This sketch closes a relay or other device/component that controls the remote shutter on a digital camera.
 
   Consult camera manual on how to connect relay to remote shutter for your specific camera.
@@ -17,9 +19,9 @@
 ulong debounceTime = 0;
 ulong bounceCheck = 250;
 
-int runningLED = LED_BUILTIN;  //onboard Pico LED
-int shutterRelayPin = 11;      // pin for camera shutter release control relayint
-int runButton = 12;            //input pin to start/stop the Intervalometer sequence
+int runningLED = LED_BUILTIN;  //onboard Pico LED used to indicate the exposure sequence is running
+int shutterRelayPin = 11;      //pin for camera shutter release control relay
+int runButton = 12;            //input pin to start/stop the exposure sequence
 
 long numberExposures = DEFAULT_EXPOSURES;       //number of exposure to take in sequence
 long numberExposuresCounter = numberExposures;  //counter for number of exposures left
@@ -339,4 +341,4 @@ void handleStringComplete() {
   //reset variables
   inputString = "";
   stringComplete = false;
-}
+}//handleStringComplete
