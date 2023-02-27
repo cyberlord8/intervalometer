@@ -2,6 +2,8 @@
  
   InterValometer sketch for PicoW - Copyright 2023 Timothy Millea - Released under GPLv3 license
   
+  aka - an elaborate blinky sketch with a start/stop push button and a relay
+
   This sketch closes a relay or other device/component that controls the remote shutter on a digital camera.
   
   Consult camera manual on how to connect relay to remote shutter for your specific camera.
