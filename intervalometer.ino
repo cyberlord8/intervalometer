@@ -113,9 +113,9 @@ void loop() {
     digitalWrite(runningLED, HIGH);
     Serial.print("Num: ");
     Serial.print(numberExposuresCounter);
-    Serial.print(" - Int: ");
+    Serial.print(" - Exp: ");
     Serial.print(intervalLength);
-    Serial.print(" - Spc: ");
+    Serial.print(" - Int: ");
     Serial.print(intervalSpacing);
     Serial.print(" - Mir: ");
     Serial.println(mirrorDelay);
