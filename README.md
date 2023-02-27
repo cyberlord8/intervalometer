@@ -10,7 +10,7 @@
 
 Two modes of operation:
 
-Serial port control through the USB port connected to a PC
+1. Serial port control through the USB port connected to a PC
 
   Current commands:
   
@@ -21,4 +21,4 @@ Serial port control through the USB port connected to a PC
     ~RUN - Starts the exposure sequence using the prescribed values
     ~STP - Stops the exposure sequence
 
-Push button starts and stops exposure sequence, check code for pin number.
+2. Push button starts and stops exposure sequence, check code for pin number.
