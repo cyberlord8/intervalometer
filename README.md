@@ -20,5 +20,6 @@ Two modes of operation:
         ~MIR - Sets the mirror lift delay (must match camera setting)
         ~RUN - Starts the exposure sequence using the prescribed values
         ~STP - Stops the exposure sequence
+        ~RST - Stops the exposure sequence and resets the variables to default
 
 2. Push button starts and stops exposure sequence, check code for pin number.
