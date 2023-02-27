@@ -42,17 +42,19 @@ void buttonInterupt() {
       Serial.println(mirrorDelay);
       Serial.println("Starting exposure sequence...");
       Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-    } else {
+    }  //if running sequence
+    else {
+      //uncomment to halt exposure sequence immediately
       // digitalWrite(runningLED, LOW);
       // digitalWrite(shutterRelay, LOW);
       isRunning = false;
       hasStopped = true;
       numberExposuresCounter = numberExposures;
-      Serial.println("Stopping...");
-    }
-  }
+      Serial.println("Stopping exposure sequence...");
+    }  //else not running sequence
+  }    //if we haven't detected a switch bounce
   debounceTime = millis();
-}
+}  //buttonInterupt
 
 void setup() {
   // put your setup code here, to run once:
@@ -109,8 +111,6 @@ void loop() {
     Serial.println(mirrorDelay);
     if (numberExposuresCounter > 0) {
       float timeRemaining = ((numberExposuresCounter * intervalLength) + (numberExposuresCounter * intervalSpacing)) / 1000.0;
-      // Serial.print("Seconds remaining: ");
-      // Serial.println(timeRemaining);
       if (timeRemaining < 60) {
         Serial.print("Seconds remaining: ");
         Serial.println(timeRemaining);
@@ -152,10 +152,10 @@ void loop() {
     delay(intervalLength + mirrorDelay);
     digitalWrite(shutterRelay, LOW);
     delay(intervalSpacing);
-    mySerialEvent();
-    if (stringComplete) {  //if serial read has completed
-      handleStringComplete();
-    }  //if read serial console complete
+    mySerialEvent();           //check serial port for input
+    if (stringComplete) {      //if serial read has completed
+      handleStringComplete();  //handle string input
+    }                          //if read serial console complete
     if (numberExposuresCounter > -1) {
       if (--numberExposuresCounter == 0) {
         numberExposuresCounter = numberExposures;
@@ -166,9 +166,9 @@ void loop() {
         Serial.println(" exposures...");
         Serial.println("Stopping exposure sequence...");
         Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-      }
-    }
-  }  //if running
+      }  //if we've reached the end of the sequence
+    }    //if we're running a finite sequence
+  }      //if running exposure sequence loop
   else {
     digitalWrite(runningLED, LOW);
     digitalWrite(shutterRelay, LOW);
@@ -176,12 +176,12 @@ void loop() {
       hasStopped = false;
       Serial.println("Stopped!");
       Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-    }
-    mySerialEvent();
-    if (stringComplete) {  //if serial read has completed
-      handleStringComplete();
-    }  //if read serial console complete
-  }    //else not running
+    }                          //if we just stopped - print "Stopped!"
+    mySerialEvent();           //check serial port for input
+    if (stringComplete) {      //if serial read has completed
+      handleStringComplete();  //handle input string
+    }                          //if read serial console complete
+  }                            //else not running exposure sequence
 }  //loop
 
 void mySerialEvent() {
