@@ -8,27 +8,27 @@
   Most cameras have a short to ground remote shutter control, but check your camera's 
   specifics so you don't damage your camera.
 */
-ulong debounceTime = 0;
+  ulong debounceTime = 0;
+  ulong bounceCheck = 100;
 
-int runningLED = LED_BUILTIN;  //onboard Pico LED
-int shutterRelay = 11;         // pin for camera shutter release control relayint
-int runButton = 12;            //input pin to start/stop the Intervalometer sequence
-// int stopButton = 13;           //input pin to start/stop the Intervalometer sequence
+  int runningLED = LED_BUILTIN;  //onboard Pico LED
+  int shutterRelayPin = 11;      // pin for camera shutter release control relayint
+  int runButton = 12;            //input pin to start/stop the Intervalometer sequence
 
-int numberExposures = 60;                      //number of exposure to take in sequence
-int numberExposuresCounter = numberExposures;  //counter for number of exposures left
-int intervalLength = 60000;                    //shutter open interval (milli seconds)
-int intervalSpacing = 250;                     //shutter closed interval (milli seconds)
-int mirrorDelay = 0;                           //mirror lag delay (milli seconds)
+  int numberExposures = -1;                      //number of exposure to take in sequence
+  int numberExposuresCounter = numberExposures;  //counter for number of exposures left
+  int intervalLength = 1000;                    //shutter open interval (milli seconds)
+  int intervalSpacing = 250;                     //shutter closed interval (milli seconds)
+  int mirrorDelay = 0;                           //mirror lag delay (milli seconds)
 
-bool isRunning = false;  //is sequence routine running
-bool hasStopped = false;
-bool stringComplete = false;  //do we have a complete string from serial port input
+  bool isRunning = false;  //is sequence routine running
+  bool hasStopped = false;
+  bool stringComplete = false;  //do we have a complete string from serial port input
 
-String inputString;  // a string to hold incoming data
+  String inputString;  // a string to hold incoming data
 
 void buttonInterupt() {
-  if (millis() - debounceTime > 250) {
+  if ((millis() - debounceTime) > bounceCheck) {
     if (!isRunning) {
       isRunning = true;
       numberExposuresCounter = numberExposures;
@@ -60,7 +60,7 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
 
-  pinMode(shutterRelay, OUTPUT);     //relay goes on this pin
+  pinMode(shutterRelayPin, OUTPUT);  //relay goes on this pin
   pinMode(runningLED, OUTPUT);       //onboard LED
   pinMode(runButton, INPUT_PULLUP);  //push button to start exposure sequence
 
@@ -148,9 +148,9 @@ void loop() {
       }  //else must be more than an hour remaining
     }    //if not infinite sequence
 
-    digitalWrite(shutterRelay, HIGH);
+    digitalWrite(shutterRelayPin, HIGH);
     delay(intervalLength + mirrorDelay);
-    digitalWrite(shutterRelay, LOW);
+    digitalWrite(shutterRelayPin, LOW);
     delay(intervalSpacing);
     mySerialEvent();           //check serial port for input
     if (stringComplete) {      //if serial read has completed
@@ -171,7 +171,7 @@ void loop() {
   }      //if running exposure sequence loop
   else {
     digitalWrite(runningLED, LOW);
-    digitalWrite(shutterRelay, LOW);
+    digitalWrite(shutterRelayPin, LOW);
     if (hasStopped) {
       hasStopped = false;
       Serial.println("Stopped!");
