@@ -8,24 +8,30 @@
   Most cameras have a short to ground remote shutter control, but check your camera's 
   specifics so you don't damage your camera.
 */
-  ulong debounceTime = 0;
-  ulong bounceCheck = 100;
 
-  int runningLED = LED_BUILTIN;  //onboard Pico LED
-  int shutterRelayPin = 11;      // pin for camera shutter release control relayint
-  int runButton = 12;            //input pin to start/stop the Intervalometer sequence
+#define DEFAULT_EXPOSURES -1;
+#define DEFAULT_INTERVAL 1000;
+#define DEFAULT_SPACING 250;
+#define DEFAULT_MIRROR 0;
 
-  int numberExposures = -1;                      //number of exposure to take in sequence
-  int numberExposuresCounter = numberExposures;  //counter for number of exposures left
-  int intervalLength = 1000;                    //shutter open interval (milli seconds)
-  int intervalSpacing = 250;                     //shutter closed interval (milli seconds)
-  int mirrorDelay = 0;                           //mirror lag delay (milli seconds)
+ulong debounceTime = 0;
+ulong bounceCheck = 250;
 
-  bool isRunning = false;  //is sequence routine running
-  bool hasStopped = false;
-  bool stringComplete = false;  //do we have a complete string from serial port input
+int runningLED = LED_BUILTIN;  //onboard Pico LED
+int shutterRelayPin = 11;      // pin for camera shutter release control relayint
+int runButton = 12;            //input pin to start/stop the Intervalometer sequence
 
-  String inputString;  // a string to hold incoming data
+long numberExposures = DEFAULT_EXPOSURES;       //number of exposure to take in sequence
+long numberExposuresCounter = numberExposures;  //counter for number of exposures left
+ulong intervalLength = DEFAULT_INTERVAL;        //shutter open interval (milli seconds)
+ulong intervalSpacing = DEFAULT_SPACING;        //shutter closed interval (milli seconds)
+ulong mirrorDelay = DEFAULT_MIRROR;             //mirror lag delay (milli seconds)
+
+bool isRunning = false;  //is sequence routine running
+bool hasStopped = false;
+bool stringComplete = false;  //do we have a complete string from serial port input
+
+String inputString;  // a string to hold incoming data
 
 void buttonInterupt() {
   if ((millis() - debounceTime) > bounceCheck) {
@@ -70,6 +76,10 @@ void setup() {
   delay(5000);
   digitalWrite(runningLED, LOW);
 
+  printMenu();
+}  //setup
+
+void printMenu() {
   Serial.println();
   Serial.println();
   Serial.println("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
@@ -78,8 +88,8 @@ void setup() {
   Serial.println("~ Command mode");
   Serial.println("Current commands:");
   Serial.println("~NUM - Sets the number of exposures to take (-1 infinite)");
-  Serial.println("~INT - Sets the length of the shutter open in milli seconds");
-  Serial.println("~SPC - Sets the delay between sequences (shutter closed)");
+  Serial.println("~EXP - Sets exposure time in milli seconds (shutter open)");
+  Serial.println("~INT - Sets the interval between exposures (shutter closed)");
   Serial.println("~MIR - Sets the mirror lift delay (must match camera setting)");
   Serial.println("~RUN - Starts the exposure sequence using the prescribed values");
   Serial.println("~STP - Stops the exposure sequence");
@@ -94,7 +104,7 @@ void setup() {
   Serial.println(mirrorDelay);
   Serial.println();
   Serial.println("Ready!");
-}  //setup
+}  // printMenu
 
 void loop() {
   // put your main code here, to run repeatedly:
@@ -202,16 +212,31 @@ void handleStringComplete() {
   if (inputString.startsWith("~")) {  //check for command character
     inputString.toUpperCase();
     inputString.remove(0, 1);  //remove the '~'
-    if (inputString.startsWith("INT")) {
-      inputString.remove(0, 4);        //remove "INTV" and the space
-      inputString.trim();              //trim any white space
-      if (inputString.toInt() == 0) {  //if no value was supplied
-        Serial.print("Current Interval Length: ");
-        Serial.println(intervalLength);  //print the current WPM
+    if (inputString.startsWith("EXP")) {
+      inputString.remove(0, 4);  //remove "EXP" and the space
+      inputString.trim();        //trim any white space
+      if (inputString.endsWith("S")) {
+        inputString.remove(inputString.indexOf("S"), 1);
+        Serial.println(inputString);
+        intervalLength = inputString.toInt() * 1000;
+      } else if (inputString.endsWith("M")) {
+        inputString.remove(inputString.indexOf("M"), 1);
+        Serial.println(inputString);
+        intervalLength = inputString.toInt() * 1000 * 60;
+      } else if (inputString.endsWith("H")) {
+        inputString.remove(inputString.indexOf("H"), 1);
+        Serial.println(inputString);
+        intervalLength = inputString.toInt() * 1000 * 60 * 60;
+      } else if (inputString.toInt() == 0) {  //if no value was supplied
+        Serial.print("Current exposure time: ");
+        Serial.println(intervalLength);  //print the current EXP
+        inputString = "";
+        stringComplete = false;
         return;
+      } else {
+        intervalLength = inputString.toInt();  // set WPM to value supplied
       }
-      intervalLength = inputString.toInt();  // set WPM to value supplied
-      Serial.print("Set INT to: ");
+      Serial.print("Set EXP to: ");
       Serial.println(intervalLength);
     }  // if INT command
     else if (inputString.startsWith("NUM")) {
@@ -220,6 +245,8 @@ void handleStringComplete() {
       if (inputString.toInt() == 0) {  //if no value was supplied
         Serial.print("Current NUM: ");
         Serial.println(numberExposures);  //print the current NUM
+        inputString = "";
+        stringComplete = false;
         return;
       }
       numberExposures = inputString.toInt();  // set NUM to value supplied
@@ -229,17 +256,32 @@ void handleStringComplete() {
       Serial.print("Set NUM to: ");
       Serial.println(numberExposures);
     }  // if NUM command
-    else if (inputString.startsWith("SPC")) {
-      inputString.remove(0, 4);        //remove "INTV" and the space
-      inputString.trim();              //trim any white space
-      if (inputString.toInt() == 0) {  //if no value was supplied
-        Serial.print("Current SPC: ");
+    else if (inputString.startsWith("INT")) {
+      inputString.remove(0, 4);  //remove "INT" and the space
+      inputString.trim();        //trim any white space
+      if (inputString.endsWith("S")) {
+        inputString.remove(inputString.indexOf("S"), 1);
+        Serial.println(inputString);
+        intervalSpacing = inputString.toInt() * 1000;
+      } else if (inputString.endsWith("M")) {
+        inputString.remove(inputString.indexOf("M"), 1);
+        Serial.println(inputString);
+        intervalSpacing = inputString.toInt() * 1000 * 60;
+      } else if (inputString.endsWith("H")) {
+        inputString.remove(inputString.indexOf("H"), 1);
+        Serial.println(inputString);
+        intervalSpacing = inputString.toInt() * 1000 * 60 * 60;
+      } else if (inputString.toInt() == 0) {  //if no value was supplied
+        Serial.print("Current exposure interval: ");
         Serial.println(intervalSpacing);  //print the current WPM
+        inputString = "";
+        stringComplete = false;
         return;
+      } else {
+        intervalSpacing = inputString.toInt();
       }
-      intervalSpacing = inputString.toInt();  // set WPM to value supplied
-      Serial.print("Set SPC to: ");
-      Serial.println(intervalLength);
+      Serial.print("Set INT to: ");
+      Serial.println(intervalSpacing);
     }  // if SPC command
     else if (inputString.startsWith("MIR")) {
       inputString.remove(0, 4);        //remove "INTV" and the space
@@ -247,6 +289,8 @@ void handleStringComplete() {
       if (inputString.toInt() == 0) {  //if no value was supplied
         Serial.print("Current MIR: ");
         Serial.println(mirrorDelay);  //print the current WPM
+        inputString = "";
+        stringComplete = false;
         return;
       }
       mirrorDelay = inputString.toInt();  // set WPM to value supplied
@@ -273,6 +317,18 @@ void handleStringComplete() {
       numberExposuresCounter = numberExposures;
       Serial.println("Stopping...");
     }  // if STP command
+    else if (inputString.startsWith("RST")) {
+      Serial.println("Stopping...");
+      isRunning = false;
+      hasStopped = true;
+      Serial.println("Reseting variables to default values...");
+      numberExposures = DEFAULT_EXPOSURES;
+      intervalLength = DEFAULT_INTERVAL;
+      intervalSpacing = DEFAULT_SPACING;
+      mirrorDelay = DEFAULT_MIRROR;
+      numberExposuresCounter = numberExposures;
+      printMenu();
+    }  // if RST command
     else {
       Serial.println("ERROR! Unrecognised command");
     }
